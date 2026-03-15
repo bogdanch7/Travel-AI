@@ -165,4 +165,22 @@ export const agentTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'clear_trip_context',
+      description: 'Reset/clear the current trip context. Use this when the user explicitly asks to start over, or when they start discussing a completely different trip destination/plan that makes the previous context irrelevant.',
+      parameters: {
+        type: 'object',
+        properties: {
+          chatId: {
+            type: 'string',
+            description: 'The chat ID to clear context for',
+          },
+        },
+        required: ['chatId'],
+      },
+    },
+  },
 ];
+

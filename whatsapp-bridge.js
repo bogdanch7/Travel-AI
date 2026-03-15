@@ -34,15 +34,28 @@ client.on('ready', () => {
     console.log('WhatsApp Bridge is ready!');
 });
 
+// 1.5 Local Deduplication for Bridge
+const processedMessages = new Set();
+setInterval(() => {
+    if (processedMessages.size > 1000) processedMessages.clear();
+}, 60000); 
+
+
 // 2. Listen for Messages
 client.on('message', async (msg) => {
+    const msgId = msg.id._serialized || msg.id.id;
+    
+    // Local bridge deduplication
+    if (processedMessages.has(msgId)) return;
+    processedMessages.add(msgId);
+
     const chat = await msg.getChat();
 
     // Logic: Forward if it's a 1:1 DM OR if it's a group message that mentions @VolaBot
     const shouldForward = !chat.isGroup || msg.body.includes('@VolaBot');
 
     if (shouldForward) {
-        console.log(`Forwarding ${chat.isGroup ? 'group' : '1:1'} message from ${msg.author || msg.from}`);
+        console.log(`[${new Date().toISOString()}] Forwarding message ${msgId} from ${msg.author || msg.from}`);
 
         // Construct Mock Meta Webhook JSON
         const mockPayload = {
@@ -63,10 +76,10 @@ client.on('message', async (msg) => {
                         }],
                         messages: [{
                             from: msg.from, // Group ID or Personal ID
-                            id: msg.id.id,
+                            id: msgId,
                             timestamp: msg.timestamp.toString(),
                             type: 'text',
-                            text: { body: msg.body }, // KEEP THE WHOLE TEXT! The backend handles stripping @VolaBot.
+                            text: { body: msg.body },
                             participant: msg.author || null // Original sender (if in group)
                         }]
                     }
@@ -74,11 +87,10 @@ client.on('message', async (msg) => {
             }]
         };
 
-        try {
-            await axios.post(BACKEND_URL, mockPayload);
-        } catch (err) {
+        // Fire and forget (don't await) to allow WhatsApp to acknowledge immediately
+        axios.post(BACKEND_URL, mockPayload).catch(err => {
             console.error('Failed to forward message to backend:', err.message);
-        }
+        });
     }
 });
 
@@ -97,7 +109,7 @@ app.post('/trimite-raspuns', async (req, res) => {
 
     try {
         await client.sendMessage(groupId, text);
-        console.log(`Sent reply to ${groupId}`);
+        console.log(`[${new Date().toISOString()}] Sent reply to ${groupId}`);
         res.send({ status: 'success' });
     } catch (err) {
         console.error('Failed to send message via WhatsApp:', err.message);
@@ -105,6 +117,14 @@ app.post('/trimite-raspuns', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Bridge active on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Bridge server listening on port ${PORT}`);
+}).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`❌ PORT ${PORT} IS ALREADY IN USE! Please kill existing bridge processes.`);
+        process.exit(1);
+    } else {
+        console.error('Bridge server error:', err);
+    }
 });
+

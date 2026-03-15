@@ -1,48 +1,52 @@
 import { FlightResult, BookingExtraction, DestinationResult, GroupOption } from '../types/app';
 import { formatPrice } from '../utils/text';
 import { formatDateForWhatsApp } from '../utils/time';
+import { getAirlineName } from '../utils/airlineUtils';
+
 
 /**
  * Format flight results for WhatsApp display.
  */
 export function formatFlightResults(flights: FlightResult[], maxResults: number = 3): string {
   if (flights.length === 0) {
-    return "I couldn't find any flights for that route. Try different dates or check vola.ro directly.";
+    return "Nu am găsit zboruri pentru acest traseu. Încearcă alte date sau verifică direct pe vola.ro.";
   }
 
   // Check if data is unavailable
   if (flights.length === 1 && flights[0].notes?.includes('LIVE_DATA_UNAVAILABLE')) {
-    return `⚠️ I couldn't get live pricing right now. You can check current prices directly:\n🔗 ${flights[0].deeplinkOrReference}`;
+    return `⚠️ Nu am putut obține prețuri live în acest moment. Poți verifica prețurile actuale direct aici:\n🔗 ${flights[0].deeplinkOrReference}`;
   }
 
   const top = flights.slice(0, maxResults);
-  const lines: string[] = ['✈️ *Flight options found:*\n'];
+  const lines: string[] = ['✈️ *Opțiuni de zbor găsite:*\n'];
 
   for (let i = 0; i < top.length; i++) {
     const f = top[i];
     const num = i + 1;
-    lines.push(`${num}. ${f.airline} — ${formatPrice(f.priceAmount, f.currency)}`);
+    const airlineName = getAirlineName(f.airline);
+    lines.push(`${num}. *${airlineName}* — ${formatPrice(f.priceAmount, f.currency)}`);
     lines.push(`   ${f.origin} → ${f.destination}`);
-    lines.push(`   📅 ${formatDateForWhatsApp(f.departDate)}${f.returnDate ? ` → ${formatDateForWhatsApp(f.returnDate)}` : ' (one-way)'}`);
+    lines.push(`   📅 ${formatDateForWhatsApp(f.departDate)}${f.returnDate ? ` → ${formatDateForWhatsApp(f.returnDate)}` : ' (dus)'}`);
 
     const details: string[] = [];
     if (f.stops === 0) details.push('Direct');
-    else if (f.stops > 0) details.push(`${f.stops} stop${f.stops > 1 ? 's' : ''}`);
-    if (f.baggageIncluded) details.push('✅ Bag included');
+    else if (f.stops > 0) details.push(`${f.stops} escală${f.stops > 1 ? 'e' : ''}`);
+    if (f.baggageIncluded) details.push('✅ Bagaj inclus');
     if (details.length) lines.push(`   ${details.join(' • ')}`);
     lines.push('');
   }
 
   if (flights.length > maxResults) {
-    lines.push(`📊 ${flights.length - maxResults} more options available`);
+    lines.push(`📊 Încă ${flights.length - maxResults} opțiuni disponibile`);
   }
 
   if (top[0]?.deeplinkOrReference) {
-    lines.push(`\n🔗 Book here: ${top[0].deeplinkOrReference}`);
+    lines.push(`\n🔗 Rezervă aici: ${top[0].deeplinkOrReference}`);
   }
 
   return lines.join('\n');
 }
+
 
 /**
  * Format a booking extraction result for WhatsApp.

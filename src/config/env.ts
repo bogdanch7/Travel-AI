@@ -11,7 +11,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 
   // WhatsApp
-  WHATSAPP_PROVIDER: z.enum(['meta', 'twilio', 'bridge']).default('meta'),
+  WHATSAPP_PROVIDER: z.enum(['meta', 'bridge']).default('meta'),
   WHATSAPP_VERIFY_TOKEN: optionalEnvString,
   WHATSAPP_API_TOKEN: optionalEnvString,
   WHATSAPP_PHONE_NUMBER_ID: optionalEnvString,
@@ -19,17 +19,8 @@ const envSchema = z.object({
   WHATSAPP_BOT_NAME: z.string().default('VolaBot'),
   WHATSAPP_BRIDGE_URL: z.string().url().default('http://localhost:3001'),
 
-  // Twilio
-  TWILIO_ACCOUNT_SID: optionalEnvString,
-  TWILIO_AUTH_TOKEN: optionalEnvString,
-  TWILIO_WHATSAPP_NUMBER: optionalEnvString,
-  TWILIO_WEBHOOK_BASE_URL: optionalEnvString,
-  TWILIO_VALIDATE_SIGNATURE: z.preprocess(
-    (val) => (typeof val === 'string' ? val.toLowerCase() === 'true' : !!val),
-    z.boolean()
-  ).default(true),
-
   // OpenAI
+
   OPENAI_API_KEY: z.string().min(1),
   OPENAI_BASE_URL: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4o'),

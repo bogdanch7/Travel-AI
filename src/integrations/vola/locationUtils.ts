@@ -699,7 +699,9 @@ export const CITY_NAME_TO_CODE: Record<string, string> = {
  */
 export function resolveVolaCityCode(code: string): string {
   const upper = code.toUpperCase().trim();
-  return AIRPORT_TO_CITY[upper] || upper;
+  const result = AIRPORT_TO_CITY[upper] || upper;
+  console.log(`resolveVolaCityCode trace: ${code} -> ${result}`);
+  return result;
 }
 
 /**
@@ -709,5 +711,8 @@ export function resolveCityNameToCode(name: string): string | null {
   const normalized = name.toUpperCase().trim();
   // Remove trailing colon often found in city lists
   const clean = normalized.replace(/:$/, '');
-  return CITY_NAME_TO_CODE[clean] || null;
+  const result = CITY_NAME_TO_CODE[clean] || null;
+  console.log(`resolveCityNameToCode trace: "${name}" -> ${result}`);
+  return result;
 }
+

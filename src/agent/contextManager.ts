@@ -367,3 +367,10 @@ export async function updateContext(chatId: string, patch: Partial<TripContext>)
 export async function getContext(chatId: string): Promise<TripContext | null> {
   return getTripContext(chatId);
 }
+
+export async function clearContext(chatId: string): Promise<void> {
+  const { deleteTripContext } = await import('../store/repositories/tripContextRepo');
+  await deleteTripContext(chatId);
+  getLogger().info({ chatId }, 'Trip context cleared');
+}
+

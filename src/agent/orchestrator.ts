@@ -4,7 +4,7 @@ import { callOpenAI } from '../integrations/openai/client';
 import { agentTools } from '../integrations/openai/tools';
 import { buildSystemPrompt } from './systemPrompt';
 import { classifyIntent } from './intentRouter';
-import { loadContext, saveTurn, updateContext, getContext, upsertUserPreference } from './contextManager';
+import { loadContext, saveTurn, updateContext, getContext, upsertUserPreference, clearContext } from './contextManager';
 import { formatFlightResults, formatBookingExtraction, formatBookingVerdict, formatDestinationResult, formatGroupResponse } from './responseFormatter';
 import { searchFlights } from '../integrations/vola/searchFlights';
 import { FlightSearchInput, NormalizedFlightOffer } from '../integrations/vola/types';
@@ -20,6 +20,7 @@ import {
   analyzeBookingImageArgsSchema,
   identifyDestinationArgsSchema,
   updateUserPreferenceArgsSchema,
+  clearTripContextArgsSchema,
 } from './schemas';
 import type { TriggerReason } from '../integrations/whatsapp/groupPolicy';
 
@@ -258,6 +259,7 @@ async function executeTool(
         adults: parsed.passengers || 1,
       };
 
+
       const volaResults = await searchFlights(input);
       const results = volaResults.map(mapToFlightResult);
 
@@ -316,6 +318,14 @@ async function executeTool(
         formatted: formatDestinationResult(result),
       });
     }
+
+    case 'clear_trip_context': {
+      const parsed = clearTripContextArgsSchema.parse(args);
+      const chatId = parsed.chatId || message.chatId;
+      await clearContext(chatId);
+      return JSON.stringify({ success: true, message: 'Trip context cleared. Fresh start!' });
+    }
+
 
     default:
       return JSON.stringify({ error: `Unknown tool: ${toolName}` });

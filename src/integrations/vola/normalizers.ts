@@ -5,7 +5,7 @@ import { resolveVolaCityCode } from './locationUtils';
 /**
  * Normalize a single Vola offer into the internal NormalizedFlightOffer schema.
  */
-export function normalizeVolaOffer(offer: VolaOffer): NormalizedFlightOffer | null {
+export function normalizeVolaOffer(offer: VolaOffer, adults: number = 1): NormalizedFlightOffer | null {
   const logger = getLogger();
 
   try {
@@ -42,7 +42,7 @@ export function normalizeVolaOffer(offer: VolaOffer): NormalizedFlightOffer | nu
       airline,
       stops: outboundStops + inboundStops,
       baggageIncluded: false,
-      deeplinkOrReference: buildDeeplink(origin, destination, departDate, returnDate),
+      deeplinkOrReference: buildDeeplink(origin, destination, departDate, returnDate, adults),
       notes: buildNotes(outbound, inbound, offer),
     };
   } catch (err) {
@@ -54,12 +54,13 @@ export function normalizeVolaOffer(offer: VolaOffer): NormalizedFlightOffer | nu
 /**
  * Normalize an array of Vola offers.
  */
-export function normalizeVolaResults(offers: VolaOffer[]): NormalizedFlightOffer[] {
+export function normalizeVolaResults(offers: VolaOffer[], adults: number = 1): NormalizedFlightOffer[] {
   return offers
-    .map(normalizeVolaOffer)
+    .map(o => normalizeVolaOffer(o, adults))
     .filter((r): r is NormalizedFlightOffer => r !== null)
     .sort((a, b) => a.priceAmount - b.priceAmount);
 }
+
 
 function buildNotes(outbound: VolaStage, inbound: VolaStage | undefined, offer: VolaOffer): string {
   const parts: string[] = [];
@@ -86,7 +87,7 @@ function buildNotes(outbound: VolaStage, inbound: VolaStage | undefined, offer: 
   return parts.join(' • ');
 }
 
-function buildDeeplink(origin: string, destination: string, departDate: string, returnDate?: string): string {
+function buildDeeplink(origin: string, destination: string, departDate: string, returnDate?: string, adults: number = 1): string {
   // To match exact Vola.ro frontend URL structure: https://www.vola.ro/search_results?from=CITY:BUH&to=CITY:SVQ&dd=2026-04-09&rd=2026-04-15&ad=1&cc=ECONOMY
   const base = 'https://www.vola.ro/search_results';
   
@@ -105,8 +106,9 @@ function buildDeeplink(origin: string, destination: string, departDate: string, 
     params.set('rd', returnDate);
   }
 
-  params.set('ad', '1');
+  params.set('ad', adults.toString());
   params.set('cc', 'ECONOMY');
 
   return `${base}?${params.toString()}`;
 }
+

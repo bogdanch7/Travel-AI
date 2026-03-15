@@ -14,7 +14,7 @@ export async function sendTextMessage(to: string, text: string): Promise<void> {
   const logger = getLogger();
 
   // Keep outbound replies comfortably within WhatsApp limits.
-  const safeText = truncate(text, env.WHATSAPP_PROVIDER === 'twilio' ? 1600 : 4000);
+  const safeText = truncate(text, 4000);
 
   if (env.WHATSAPP_PROVIDER === 'bridge') {
     const bridgeUrl = `${env.WHATSAPP_BRIDGE_URL.replace(/\/$/, '')}/trimite-raspuns`;
@@ -32,37 +32,7 @@ export async function sendTextMessage(to: string, text: string): Promise<void> {
     return;
   }
 
-  if (env.WHATSAPP_PROVIDER === 'twilio') {
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`;
-    const auth = Buffer.from(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`).toString('base64');
-    const params = new URLSearchParams();
-    params.append('To', to);
-    params.append('From', env.TWILIO_WHATSAPP_NUMBER);
-    params.append('Body', safeText);
 
-    await withRetry(
-      async () => {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${auth}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString(),
-        });
-
-        if (!response.ok) {
-          const errorBody = await response.text();
-          logger.error({ status: response.status, errorBody, to }, 'Twilio send failed');
-          throw new Error(`Twilio API error: ${response.status}`);
-        }
-        logger.info({ to, textLength: safeText.length }, 'Twilio message sent');
-      },
-      'sendTextMessageTwilio',
-      { maxAttempts: 2, baseDelayMs: 1000 }
-    );
-    return;
-  }
 
   // Default: Meta Cloud API
   const url = `${WHATSAPP_API_BASE}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
@@ -152,8 +122,7 @@ export async function getMediaUrl(mediaId: string): Promise<string> {
   const env = getEnv();
   const logger = getLogger();
 
-  // For Twilio, the mediaId is actually passed directly as the MediaUrl0 from the payload
-  if (env.WHATSAPP_PROVIDER === 'twilio' || env.WHATSAPP_PROVIDER === 'bridge') {
+  if (env.WHATSAPP_PROVIDER === 'bridge') {
     return mediaId; // It's already the URL
   }
 
@@ -186,10 +155,6 @@ export async function downloadMediaAsBase64(mediaUrl: string): Promise<string> {
 
   if (env.WHATSAPP_PROVIDER === 'bridge') {
     headers = {};
-  } else if (env.WHATSAPP_PROVIDER === 'twilio') {
-    // Twilio uses HTTP Basic Auth (AccountSid : AuthToken)
-    const encodedCredentials = Buffer.from(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`).toString('base64');
-    headers = { Authorization: `Basic ${encodedCredentials}` };
   } else {
     // Meta uses Bearer token
     headers = { Authorization: `Bearer ${env.WHATSAPP_API_TOKEN}` };

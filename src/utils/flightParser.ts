@@ -67,9 +67,10 @@ export function sanitizeFlightRequest(
     destination: normalizeCity(aiExtracted.destination),
     departureDate: aiExtracted.departureDate,
     returnDate: aiExtracted.returnDate,
-    passengers: aiExtracted.passengers || 1,
+    passengers: aiExtracted.passengers || aiExtracted.adults || 1,
     fallbackUrl: ''
   };
+
 
   // Ensure we don't return defaults unless asked
   if (!sanitized.origin && !allowContextFallback) {

@@ -6,7 +6,7 @@ import { normalizeVolaResults } from './normalizers';
 import { buildSearchCacheKey, VolaDiscoverRequest, FlightSearchInput, NormalizedFlightOffer } from './types';
 import { scrapeVolaPrices } from './scraper';
 import { getEnv } from '../../config/env';
-import { resolveVolaCityCode, resolveCityNameToCode } from './locationUtils';
+import { resolveVolaCityCode, resolveCityNameToCode, CITY_NAME_TO_CODE } from './locationUtils';
 import { sanitizeFlightRequest, buildVolaUrl } from '../../utils/flightParser';
 
 /**
@@ -28,14 +28,27 @@ export async function searchFlights(input: FlightSearchInput): Promise<Normalize
     resolveLocation(sanitized.destination || input.destination, 'DESTINATION'),
   ]);
 
-  logger.info({ 
-    originResolved: origin?.code, 
-    destResolved: destination?.code,
-    originType: origin?.type,
-    destType: destination?.type,
-    sanitizedOrigin: sanitized.origin,
-    sanitizedDest: sanitized.destination
-  }, 'Vola location resolution results');
+  console.log('DEBUG RESOLUTION:', { 
+    rawDest: sanitized.destination || input.destination,
+    resolved: destination?.code,
+    allValuesIncludeROM: Object.values(CITY_NAME_TO_CODE).includes('ROM')
+  });
+
+    logger.info({ 
+      originResolved: origin?.code, 
+      destResolved: destination?.code,
+      originType: origin?.type,
+      destType: destination?.type,
+      sanitizedOrigin: sanitized.origin,
+      sanitizedDest: sanitized.destination
+    }, 'Vola location resolution results');
+    
+    console.log('FINAL RESOLUTION SUMMARY:', {
+        originCode: origin?.code,
+        destCode: destination?.code,
+        sanitizedDest: sanitized.destination
+    });
+
 
   if (!origin || !destination) {
     logger.warn({ origin: input.origin, destination: input.destination }, 'Could not resolve location codes');
@@ -103,7 +116,9 @@ export async function searchFlights(input: FlightSearchInput): Promise<Normalize
       return createFallbackResults(origin.code, destination.code, input.departDate, input.returnDate, input.adults, 'No flights found for this route and dates.');
     }
 
-    const normalized = normalizeVolaResults(offers);
+    const normalized = normalizeVolaResults(offers, input.adults);
+
+
 
     // Update with input values for consistency
     normalized.forEach(o => {
@@ -167,30 +182,33 @@ export async function searchFlights(input: FlightSearchInput): Promise<Normalize
 
 async function resolveLocation(term: string, type: 'ORIGIN' | 'DESTINATION'): Promise<{ code: string; type: 'CITY' | 'AIRPORT' } | null> {
   const normalized = term.toUpperCase().trim();
-  const client = getVolaClient();
+  console.log(`resolveLocation trace: term="${term}", norm="${normalized}"`);
   
-  // 1. Try Autocomplete first - it's the source of truth for Vola's expected types
-  const results = await client.autocomplete(term, type);
-  if (results[0]) {
-    return { code: results[0].code, type: results[0].type };
+  // 1. Check if it's already a 3-letter IATA-like code (AI extracted or pre-mapped)
+  if (normalized.length === 3 && /^[A-Z]{3}$/.test(normalized)) {
+    // Check if it's a known city code by looking at its value in CITY_NAME_TO_CODE
+    const isCity = Object.values(CITY_NAME_TO_CODE).includes(normalized);
+    console.log(`resolveLocation trace: is 3-letter code, isCity=${isCity}, returning ${normalized}`);
+    return { code: normalized, type: isCity ? 'CITY' : 'AIRPORT' };
   }
 
-  // 2. Fallback to common mappings if autocomplete fails
+
+  // 2. Try common mappings (city names)
   const mappedCode = resolveCityNameToCode(normalized);
   if (mappedCode) {
     return { code: mappedCode, type: 'CITY' };
   }
 
-  // 3. Final resort for 3-letter codes
-  if (normalized.length === 3 && /^[A-Z]{3}$/.test(normalized)) {
-    // Vola is picky: OTP is an AIRPORT, BUH is a CITY. 
-    // If we've reached here, autocomplete failed. 
-    // Defaulting to AIRPORT is safer for codes like OTP, LHR, etc.
-    return { code: normalized, type: 'AIRPORT' };
+  // 3. Try Autocomplete as a last resort for fuzzy terms
+  const client = getVolaClient();
+  const results = await client.autocomplete(term, type);
+  if (results[0]) {
+    return { code: results[0].code, type: results[0].type };
   }
 
   return null;
 }
+
 
 /**
  * Minimal fallback logic — no price fabrication.

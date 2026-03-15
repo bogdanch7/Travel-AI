@@ -56,9 +56,17 @@ export const updateUserPreferenceArgsSchema = z.object({
   notes: z.string().optional(),
 });
 
+/** Schema for clear_trip_context tool arguments */
+export const clearTripContextArgsSchema = z.object({
+  chatId: z.string().min(1),
+});
+
+
 export type SearchFlightsArgs = z.infer<typeof searchFlightsArgsSchema>;
 export type GetTripContextArgs = z.infer<typeof getTripContextArgsSchema>;
 export type UpdateTripContextArgs = z.infer<typeof updateTripContextArgsSchema>;
 export type AnalyzeBookingImageArgs = z.infer<typeof analyzeBookingImageArgsSchema>;
 export type IdentifyDestinationArgs = z.infer<typeof identifyDestinationArgsSchema>;
 export type UpdateUserPreferenceArgs = z.infer<typeof updateUserPreferenceArgsSchema>;
+export type ClearTripContextArgs = z.infer<typeof clearTripContextArgsSchema>;
+

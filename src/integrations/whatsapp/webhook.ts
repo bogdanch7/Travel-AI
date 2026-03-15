@@ -22,7 +22,41 @@ export async function processWebhook(body: unknown, preParsedMessages?: WhatsApp
       chatType: message.chatType,
     });
 
-    logger.info({ text: message.text?.slice(0, 80) }, 'Incoming message');
+    // ── Deduplication Layer ──
+    // 1. Exact Message ID Dedup
+    const dedupKey = `msg_dedup:${message.messageId}`;
+    // 2. Content-Based Dedup (catch duplicates with different IDs in short window)
+    const contentHash = Buffer.from(message.text || '').toString('base64').slice(0, 32);
+    const contentDedupKey = `msg_content_dedup:${message.chatId}:${contentHash}`;
+
+    try {
+      const { cacheSetNX } = await import('../../store/redis');
+      
+      // Check ID first
+      const canProceedById = await cacheSetNX(dedupKey, '1', 300);
+      if (!canProceedById) {
+        logger.debug({ messageId: message.messageId }, 'Deduplication: message ID already being processed, skipping');
+        continue;
+      }
+
+      if (message.text && message.text.length > 5) {
+        const canProceedByContent = await cacheSetNX(contentDedupKey, '1', 60); // 60s window for identical content
+        if (!canProceedByContent) {
+
+           logger.info({ contentDedupKey }, 'Deduplication: identical content detected recently, skipping');
+           continue; 
+        }
+      }
+    } catch (err: any) {
+      logger.warn({ err: err.message, messageId: message.messageId }, 'Deduplication check failed, proceeding anyway');
+    }
+
+
+
+
+    logger.info({ messageId: message.messageId, text: message.text?.slice(0, 80) }, 'Incoming message');
+
+
 
     try {
       // Mark as read immediately

@@ -6,7 +6,6 @@ import { connectRedis, disconnectRedis } from './store/redis';
 import { connectPostgres, disconnectPostgres } from './store/postgres';
 import { healthRoutes } from './routes/health';
 import { webhookRoutes } from './routes/webhook';
-import { twilioWebhookRoutes } from './routes/twilioWebhook';
 import querystring from 'querystring';
 
 // Global error handlers — catch silent crashes in async paths
@@ -56,7 +55,6 @@ async function main(): Promise<void> {
   // Register routes
   await app.register(healthRoutes);
   await app.register(webhookRoutes);
-  await app.register(twilioWebhookRoutes);
 
   // Connect to data stores
   try {
@@ -91,7 +89,6 @@ async function main(): Promise<void> {
     logger.info(`✅ Server running on http://0.0.0.0:${env.PORT}`);
     logger.info(`   Health: http://localhost:${env.PORT}/health`);
     logger.info(`   Meta Webhook: http://localhost:${env.PORT}/webhook`);
-    logger.info(`   Twilio Webhook: http://localhost:${env.PORT}/webhooks/twilio/whatsapp`);
   } catch (err) {
     logger.error({ err }, '❌ Failed to start server');
     process.exit(1);

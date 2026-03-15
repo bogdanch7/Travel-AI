@@ -52,3 +52,10 @@ export async function cacheGet(key: string): Promise<string | null> {
 export async function cacheDel(key: string): Promise<void> {
   await getRedis().del(key);
 }
+
+/** Atomic Set-if-not-exists with TTL. Returns true if key was set, false otherwise. */
+export async function cacheSetNX(key: string, value: string, ttlSeconds: number): Promise<boolean> {
+  const result = await getRedis().set(key, value, 'EX', ttlSeconds, 'NX');
+  return result === 'OK';
+}
+
