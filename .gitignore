@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+*.log
+tsc_output.txt
+tscerr.txt
+.wwebjs_auth/
+.wwebjs_cache/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+package-lock.json
+pnpm-lock.yaml
+
