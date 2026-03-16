@@ -81,7 +81,7 @@ WhatsApp Bridge (whatsapp-web.js)
 WhatsApp (Reply)
 ```
 
-Setup 
+## Setup 
 
 Requirements
 
@@ -117,7 +117,7 @@ DATABASE_URL	PostgreSQL connection string
 VOLA_BASE_URL	Base URL for search (https://www.vola.ro)
 Running the Project
 
-The project requires two active processes:
+## The project requires two active processes:
 
 Start the WhatsApp bridge
 
@@ -148,8 +148,9 @@ Destination Identification
 
 [Send a landscape photo] + "Where is this? Can I fly there from Bucharest?"
 
-Technical Details
-Deduplication System
+##Technical Details
+
+##Deduplication System
 
 Redis is used to prevent the same message from being processed more than once, even if the event is re-sent by WhatsApp. Deduplication is based on both message ID and content hash.
 
@@ -171,10 +172,9 @@ Vola.ro integration: flight search currently relies on public search flows, so c
 
 Vision features: image identification and screenshot analysis depend on image quality and the context provided by the user
 
-Screenshots / Demo
+## Screenshots
 
 <img width="1375" height="743" alt="image" src="https://github.com/user-attachments/assets/4d4c6d3e-068f-4208-a745-fcda154f886b" />
 
-Project created by bogdanch7
-
+## Project created by [bogdanch7](https://github.com/bogdanch7)
 This project was created for educational and demonstration purposes as part of a hackathon.
