@@ -79,7 +79,10 @@ Fastify Server (Response)
 WhatsApp Bridge (whatsapp-web.js)
     ↓
 WhatsApp (Reply)
-Setup
+```
+
+Setup 
+
 Requirements
 
 Node.js ≥ 20
