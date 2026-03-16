@@ -1,8 +1,8 @@
 # Vola Travel AI — WhatsApp Travel Assistant
 
-A WhatsApp-native AI travel assistant built for the Vola Travel AI Challenge. Supports trip planning, booking screenshot analysis, live flight pricing from vola.ro, and destination identification from images.
+A WhatsApp-native AI travel assistant built for the Vola Travel AI Challenge. It supports trip planning, booking screenshot analysis, live flight pricing from vola.ro, and destination identification from images.
 
-## Arhitectură
+## Architecture
 
 ```text
 WhatsApp Account (Group or DM)
@@ -25,84 +25,96 @@ WhatsApp Bridge (whatsapp-web.js)
 WhatsApp (Reply)
 ```
 
-## Setup 
+## Setup
 
-### Cerințe
-- Node.js ≥ 20
-- pnpm (`npm install -g pnpm`)
-- Redis (local sau cloud)
-- PostgreSQL (local sau cloud)
-- Un cont de WhatsApp (pentru scanat QR)
-- OpenAI API key
+### Requirements
 
-### Instalare
+* Node.js ≥ 20
+* pnpm (`npm install -g pnpm`)
+* Redis (local or cloud)
+* PostgreSQL (local or cloud)
+* A WhatsApp account (for QR scan authentication)
+* OpenAI API key
+
+### Installation
 
 ```bash
 git clone https://github.com/bogdanch7/Travel-AI.git
 cd Travel-AI
 pnpm install
-Environment Variables
+```
 
-### Variabile de Mediu
+### Environment Variables
 
-Copiați `.env.example` în `.env` și completați valorile:
+Copy `.env.example` to `.env` and fill in the required values:
 
+```bash
 cp .env.example .env
 ```
 
-| Variabilă | Descriere |
-|---|---|
-| `PORT` | Portul serverului (default: 3000) |
-| `WHATSAPP_PROVIDER` | Setat pe `bridge` |
-| `WHATSAPP_BRIDGE_URL` | URL-ul unde rulează bridge-ul (default: `http://localhost:3001`) |
-| `OPENAI_API_KEY` | Cheia API OpenAI |
-| `OPENAI_MODEL` | Modelul chat (default: `gpt-4o`) |
-| `REDIS_URL` | String conexiune Redis |
-| `DATABASE_URL` | String conexiune PostgreSQL |
-| `VOLA_BASE_URL` | `https://www.vola.ro` |
+| Variable              | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| `PORT`                | Server port (default: 3000)                                        |
+| `WHATSAPP_PROVIDER`   | Set to `bridge`                                                    |
+| `WHATSAPP_BRIDGE_URL` | URL where the bridge is running (default: `http://localhost:3001`) |
+| `OPENAI_API_KEY`      | OpenAI API key                                                     |
+| `OPENAI_MODEL`        | Chat model (default: `gpt-4o`)                                     |
+| `REDIS_URL`           | Redis connection string                                            |
+| `DATABASE_URL`        | PostgreSQL connection string                                       |
+| `VOLA_BASE_URL`       | `https://www.vola.ro`                                              |
 
-### Pornire Proiect
+### Running the Project
 
-Proiectul necesită două procese active:
+The project requires two active processes:
 
-1. **Pornire Bridge (WhatsApp Web):**
+1. **Start the Bridge (WhatsApp Web):**
+
 ```bash
 pnpm bridge
 ```
-*Scanați codul QR care apare în terminal folosind aplicația WhatsApp de pe telefon.*
 
-2. **Pornire Server Backend:**
+Scan the QR code shown in the terminal using the WhatsApp app on your phone.
+
+2. **Start the Backend Server:**
+
 ```bash
 pnpm dev
 ```
 
-Serverul pornește la `http://localhost:3000`. Tabelele bazei de date sunt create automat la prima rulare.
+The server starts at `http://localhost:3000`. Database tables are created automatically on first run.
 
-## Funcționalități Demo
+## Demo Features
 
-Trimite aceste mesaje către botul tău de WhatsApp:
+Send the following messages to your WhatsApp bot:
 
-**Planificare Călătorie:**
-> "Vrem undeva cald în aprilie, 4 nopți, buget mediu, plecare din București"
+**Trip Planning:**
 
-**Prețuri Zboruri:**
-> "Caută zboruri București - Barcelona, 15-19 aprilie, 2 persoane"
+> "We want somewhere warm in April, 4 nights, medium budget, departing from Bucharest"
 
-**Trip Check (Verificare preț):**
-> [Trimite un screenshot cu o rezervare] + "E un preț bun?"
+**Flight Pricing:**
 
-**Identificare Destinație:**
-> [Trimite o poză cu un peisaj] + "Unde e asta? Pot zbura acolo din București?"
+> "Search flights Bucharest - Barcelona, April 15-19, 2 passengers"
 
-## Detalii Tehnice
+**Trip Check (Price Validation):**
 
-### Sistem de Deduplicare
-Folosim **Redis** pentru a asigura că fiecare mesaj este procesat o singură dată, chiar dacă WhatsApp re-trimite evenimentul (deduplicare pe ID și pe Hash de conținut).
+> [Send a booking screenshot] + "Is this a good price?"
 
-### Gestionare Grupuri
-Prin bridge-ul custom, asistentul poate participa real în grupuri, detectând mențiunile și gestionând conflictele de preferințe între mai mulți utilizatori.
+**Destination Identification:**
 
-## Limitări
-- **Sesiune Bridge**: Necesită ca telefonul să aibă conexiune la internet ocazional pentru a menține sesiunea WhatsApp Web activă.
-- **Vola.ro API**: Integrarea se bazează pe endpoint-uri de căutare publice; o cădere a site-ului vola.ro poate afecta rezultatele live.
+> [Send a landscape photo] + "Where is this? Can I fly there from Bucharest?"
+
+## Technical Details
+
+### Deduplication System
+
+We use **Redis** to ensure each message is processed only once, even if WhatsApp re-sends the event (deduplication by message ID and content hash).
+
+### Group Handling
+
+Through a custom bridge, the assistant can actively participate in group chats, detect mentions, and handle preference conflicts across multiple users.
+
+## Limitations
+
+* **Bridge Session**: Requires the phone to be online occasionally to keep the WhatsApp Web session active.
+* **Vola.ro API**: The integration relies on public search endpoints; if vola.ro is down, live results may be affected.
 
