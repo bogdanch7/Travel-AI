@@ -106,16 +106,17 @@ Environment Variables
 Copy .env.example to .env and fill in the required values:
 
 cp .env.example .env
+
 Variable	Description
-PORT	Server port (default: 3000)
-WHATSAPP_PROVIDER	Set to bridge
-WHATSAPP_BRIDGE_URL	URL where the bridge is running (default: http://localhost:3001)
-OPENAI_API_KEY	OpenAI API key
-OPENAI_MODEL	Model used by the assistant (default: gpt-4o)
-REDIS_URL	Redis connection string
-DATABASE_URL	PostgreSQL connection string
-VOLA_BASE_URL	Base URL for search (https://www.vola.ro)
-Running the Project
+- PORT	Server port (default: 3000)
+- WHATSAPP_PROVIDER	Set to bridge
+- WHATSAPP_BRIDGE_URL	URL where the bridge is running (default: http://localhost:3001)
+- OPENAI_API_KEY	OpenAI API key
+- OPENAI_MODEL	Model used by the assistant (default: gpt-4o)
+- REDIS_URL	Redis connection string
+- DATABASE_URL	PostgreSQL connection string
+- VOLA_BASE_URL	Base URL for search (https://www.vola.ro)
+- Running the Project
 
 ## The project requires two active processes:
 
