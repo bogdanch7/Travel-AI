@@ -118,3 +118,7 @@ Through a custom bridge, the assistant can actively participate in group chats, 
 * **Bridge Session**: Requires the phone to be online occasionally to keep the WhatsApp Web session active.
 * **Vola.ro API**: The integration relies on public search endpoints; if vola.ro is down, live results may be affected.
 
+---
+
+## Made by
+Project made by [bogdanch7](https://github.com/bogdanch7)
